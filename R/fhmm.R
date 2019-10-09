@@ -59,6 +59,4 @@ fhmm <- function(r, n_j,
 					thin = thin, seed = seed, chain = 1,
                     num_posterior_samples = num_posterior_samples)
 
-	
-	
 }
