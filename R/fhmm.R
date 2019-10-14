@@ -34,20 +34,20 @@ fhmm <- function(r, n_j,
     ## basic checks
     if(iter_max <= warm_up)
       stop("warm_up must be < iter_max",.call = FALSE)
-#    if(any(r<=0))
-#        stop("all r must be positive numbers", .call = FALSE)
-#    if(any(r>=1)){
-#        R <- ceiling(max(r)) + 1E-6 ## maximum radius
-#        r_ <- r / R ## scaled event radii
-#    }else{
-#        r_ <-  r
-#        R <- 1
-#    }
-#
-#    if(is.null(seed))
-#        seed <- 1L
-#
-#	r_  <-  qnorm(r_)
+    if(any(r<=0))
+        stop("all r must be positive numbers", .call = FALSE)
+    if(any(r>=1)){
+        R <- ceiling(max(r)) + 1E-6 ## maximum radius
+        r_ <- r / R ## scaled event radii
+    }else{
+        r_ <-  r
+        R <- 1
+    }
+
+    if(is.null(seed))
+        seed <- 1L
+
+	r_  <-  qnorm(r_)
 	r_  <- r
 
 	d <- seq(from = floor(min(r_)), to = ceiling(max(r_)), by = 0.01) ## distance grid

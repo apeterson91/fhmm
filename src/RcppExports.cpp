@@ -7,13 +7,13 @@
 using namespace Rcpp;
 
 // fhmm_fit
-Rcpp::List fhmm_fit(const Eigen::ArrayXd& r, const Eigen::MatrixXi& n_j, const Eigen::ArrayXd& d, const int& L, const int& K, const int& J, const int& iter_max, const int& warm_up, const int& thin, const int& seed, const int& chain, const int& num_posterior_samples);
+Rcpp::List fhmm_fit(const Eigen::ArrayXd& r, const Eigen::ArrayXXi& n_j, const Eigen::ArrayXd& d, const int& L, const int& K, const int& J, const int& iter_max, const int& warm_up, const int& thin, const int& seed, const int& chain, const int& num_posterior_samples);
 RcppExport SEXP _fhmm_fhmm_fit(SEXP rSEXP, SEXP n_jSEXP, SEXP dSEXP, SEXP LSEXP, SEXP KSEXP, SEXP JSEXP, SEXP iter_maxSEXP, SEXP warm_upSEXP, SEXP thinSEXP, SEXP seedSEXP, SEXP chainSEXP, SEXP num_posterior_samplesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type r(rSEXP);
-    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type n_j(n_jSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXXi& >::type n_j(n_jSEXP);
     Rcpp::traits::input_parameter< const Eigen::ArrayXd& >::type d(dSEXP);
     Rcpp::traits::input_parameter< const int& >::type L(LSEXP);
     Rcpp::traits::input_parameter< const int& >::type K(KSEXP);

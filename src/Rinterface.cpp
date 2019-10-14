@@ -15,7 +15,7 @@
 // [[Rcpp::export]]
 Rcpp::List fhmm_fit(
 		const Eigen::ArrayXd &r,
-        const Eigen::MatrixXi &n_j,
+        const Eigen::ArrayXXi &n_j,
         const Eigen::ArrayXd &d,
         const int &L,
         const int &K,
@@ -36,25 +36,32 @@ Rcpp::List fhmm_fit(
 #include "sampling_containers.hpp"
 
 	Eigen::ArrayXd alpha = Eigen::ArrayXd::Ones(K);
+	Eigen::ArrayXXd theta = Eigen::ArrayXXd::Ones(L,K);
 	double prior_mu = 0.0;
 	double prior_sd = 1.0;
 	std::normal_distribution<double> norm_draw(0,1);
-	mus = rnorm(K,prior_mu,prior_sd,rng);
+	mus = rnorm(L,K,prior_mu,prior_sd,rng);
 	pi = rdirichlet(alpha,rng);
+	w = rdirichlet(theta,rng);
 	double sample_ix = 0;
-	Eigen::ArrayXd mu_sum;
-	mu_sum = Eigen::ArrayXd::Zero(K);
+	Eigen::ArrayXXd mu_sum(L,K);
+	mu_sum = Eigen::ArrayXd::Zero(L,K);
 
 
-	for(int iter_ix = 1 ; iter_ix <= iter_max ; iter_ix ++){
+
+	/*for(int iter_ix = 1 ; iter_ix <= iter_max ; iter_ix ++){
 
 		// update cluster assignment
-		probs = dnorm(r,pi,mus);
-		for(int i = 0 ; i < r.size(); i++){
-			prob = probs.row(i);
-			std::discrete_distribution<int> d(prob.data(),prob.data() + prob.size());
-			cluster_assignment(i) = d(rng);
-		}
+		probs = dnorm_pi(J,r,n_j,pi,w,mus);
+
+	
+	for(int i = 0 ; i < J;  i++){
+		prob = probs.row(i);
+		std::discrete_distribution<int> d(prob.data(),prob.data() + prob.size());
+		cluster_assignment(i) = d(rng);
+	}
+
+	component_probs = dnorm_w(r,n_j,w,mus,cluster_assignment);
 
 		mu_sum = Eigen::ArrayXd::Zero(K);
 		for(int k = 0 ; k < K; k ++){
@@ -80,12 +87,14 @@ Rcpp::List fhmm_fit(
 			for(int d_ = 0; d_ < d.size() ; d_ ++)
 				density_samples(sample_ix,d_) = (pi * pow(2*PI,-.5) * exp(-.5 * pow(d(d_) - mus,2) )).sum() ;
 		}
-	}
+	}*/
 
 
     return(Rcpp::List::create(
 				Rcpp::Named("density") = density_samples,
 				Rcpp::Named("pi") = sampled_pis,
-				Rcpp::Named("mu") = sampled_mus
+				Rcpp::Named("mu") = sampled_mus,
+				Rcpp::Named("w") = w,
+				Rcpp::Named("Cluster_Assignment") = cluster_assignment
 				));
 }
