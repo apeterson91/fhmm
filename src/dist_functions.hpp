@@ -14,7 +14,7 @@ Eigen::ArrayXd rnorm( const int &n, double &mu, double &sd, std::mt19937 &rng){
 	return(out);
 }
 
-Eigen::ArrayXXd rnorm(const int &L, const int &K, double&mu, double&sd, std::mt19937 &rng){
+Eigen::ArrayXXd rnorm(const int &L, const int &K, double&mu, double &sd, std::mt19937 &rng){
 
 	std::normal_distribution<double> rnorm(0,1);
 	Eigen::ArrayXXd out(L,K);
@@ -25,6 +25,18 @@ Eigen::ArrayXXd rnorm(const int &L, const int &K, double&mu, double&sd, std::mt1
 	}
 
 	return(out);
+}
+
+Eigen::ArrayXXd initialize_tau(const int &L, const int &K, const int &nu_0, const double &sigma_0){
+
+  Eigen::ArrayXXd out(L,K);
+
+  for(int l = 0; l < L; l++){
+    for(int k = 0; k < K; k ++)
+      out(l,k) = sigma_0 * nu_0 / R::rchisq(nu_0);
+  }
+
+  return(out);
 }
 
 
@@ -92,3 +104,4 @@ Eigen::ArrayXXd rdirichlet( int &n, Eigen::ArrayXd &alpha, std::mt19937  &rng){
 }
 
 #endif
+

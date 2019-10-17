@@ -4,10 +4,20 @@
 #' @param r vector of distances associatd with different BEFs
 #' @param n_j matrix of integers denoting the start and length of each observations associated BEF distances
 #' @param d a 1D grid of positive real values over which the differing intensities are evaluated
-#' @param L component truncation number
-#' @param K intensity cluster truncation number
+#' @param L number of cluster mixture components
+#' @param K number of function components
 #' @param J number of rows in r matrix; number of groups
-fhmm_fit <- function(r, n_j, d, L, K, J, iter_max, warm_up, thin, seed, chain, num_posterior_samples) {
-    .Call(`_fhmm_fhmm_fit`, r, n_j, d, L, K, J, iter_max, warm_up, thin, seed, chain, num_posterior_samples)
+#' @param mu_0 prior mean for mean parameter
+#' @param kappa_0 prior variance parameter for mean normal prior
+#' @param nu_0 prior degrees of freedom for variance Inv Chisq prior
+#' @param sigma_0 prior scale for variance Inv-Chisq distribtuion
+#' @param iter_max number of total iterations to run the sampler for
+#' @param warm_up number of iterations to discard as burn-in or warm_up
+#' @param thin number of iterations to thin posterior sample draws by
+#' @param seed seed with which to initialize random number generator
+#' @param chain used for labeling
+#' @param num_posterior_samples number of posterior samples kept after thinning
+fhmm_fit <- function(r, n_j, d, L, K, J, mu_0, kappa_0, nu_0, sigma_0, iter_max, warm_up, thin, seed, chain, num_posterior_samples) {
+    .Call(`_fhmm_fhmm_fit`, r, n_j, d, L, K, J, mu_0, kappa_0, nu_0, sigma_0, iter_max, warm_up, thin, seed, chain, num_posterior_samples)
 }
 

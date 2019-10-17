@@ -1,0 +1,99 @@
+---
+title: "One Layer Mixture Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{One Layer Mixture Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r libraries}
+library(fhmm)
+library(tidyverse)
+```
+
+```{r data_generation}
+set.seed(23414)
+R <- 2
+num_schools <- 50
+d <- seq(from = 0, to = R, by = 0.01)
+lambda_1 <- function(x) ((20-x^2)*10*(x<=.75) )
+lambda_2 <- function(x) (x^2*10)*5*(x>1.25)  
+par(mfrow=c(1,2))
+tibble(Distance = c(d,d),
+       Density = c(lambda_1(d),lambda_2(d)),
+       Intensity_function = c(rep(1,length(d)),rep(2,length(d)))) %>% 
+    ggplot(aes(x=Distance,y=Density)) + geom_line() + 
+    facet_wrap(~Intensity_function) + ggthemes::theme_hc() + 
+    theme(strip.background = element_blank()) +
+    labs(title = "Generating Model Intensity Functions") 
+```
+
+```{r}
+nhpp_1 <- as_tibble(BEFcluster::rnhpp(nsim = num_schools,lambda = lambda_1,max = 25, 
+                          interval = c(0,R))) %>% mutate(intensity_function = 1)
+
+nhpp_2 <- as_tibble(BEFcluster::rnhpp(nsim = num_schools,lambda = lambda_2,max = 25,
+                          interval = c(0,R))) %>% 
+    mutate(intensity_function = 2) %>% 
+    mutate(sim_id = sim_id + num_schools)
+
+rbind(nhpp_1,nhpp_2) %>% filter(!is.na(event_times)) %>% 
+    ggplot(aes(x=event_times)) + geom_density() + 
+    ggthemes::theme_hc() + facet_wrap(~intensity_function) + 
+    theme(strip.background = element_blank()) + 
+    labs(title = "Density Estimates of Sampled Data",
+         x = "Fast Food Distances",y = "Density")
+```
+
+```{r model_fitting}
+observed_data <- rbind(nhpp_1,nhpp_2) %>% 
+  rename(school_id = sim_id,
+         FF_distance=event_times) %>% 
+    dplyr::filter(!is.na(FF_distance))
+
+r <- observed_data %>% arrange(school_id) %>% 
+    select(FF_distance) %>% pull()
+
+n_j <- observed_data %>% group_by(school_id) %>% count() %>% 
+    ungroup() %>% mutate(start = (cumsum(n) ) ) %>% 
+    mutate(start_ = replace_na(dplyr::lag(start),0) ) %>% select(-start) %>% 
+    rename(start=start_,go =n) %>% 
+    select(start,go) %>% as.matrix()
+```
+
+
+
+```{r}
+fit <- fhmm(r = r,
+            n_j = n_j,
+            mu_0 = 0,
+            kappa_0 = 1,
+            nu_0 = 1,
+            sigma_0 = 1,
+            L = 2, K = 2,
+            iter_max = 1E3,
+            warm_up = 5E2,
+            thin = 1,
+            seed = 3413)
+```
+
+
+```{r}
+plot(fit$d,colMeans(fit$fit$global_intensity),type='l')
+```
+
+
+
+```{r}
+par(mfrow=c(1,2))
+plot(fit$d,colMeans(fit$fit$cluster_intensity[,1:length(fit$d)]),type='l')
+plot(fit$d,colMeans(fit$fit$cluster_intensity[,(length(fit$d)+1):dim(fit$fit$cluster_intensity)[2]]),type='l')
+```

@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // fhmm_fit
-Rcpp::List fhmm_fit(const Eigen::ArrayXd& r, const Eigen::ArrayXXi& n_j, const Eigen::ArrayXd& d, const int& L, const int& K, const int& J, const int& iter_max, const int& warm_up, const int& thin, const int& seed, const int& chain, const int& num_posterior_samples);
-RcppExport SEXP _fhmm_fhmm_fit(SEXP rSEXP, SEXP n_jSEXP, SEXP dSEXP, SEXP LSEXP, SEXP KSEXP, SEXP JSEXP, SEXP iter_maxSEXP, SEXP warm_upSEXP, SEXP thinSEXP, SEXP seedSEXP, SEXP chainSEXP, SEXP num_posterior_samplesSEXP) {
+Rcpp::List fhmm_fit(const Eigen::ArrayXd& r, const Eigen::ArrayXXi& n_j, const Eigen::ArrayXd& d, const int& L, const int& K, const int& J, const double& mu_0, const double& kappa_0, const int& nu_0, const double& sigma_0, const int& iter_max, const int& warm_up, const int& thin, const int& seed, const int& chain, const int& num_posterior_samples);
+RcppExport SEXP _fhmm_fhmm_fit(SEXP rSEXP, SEXP n_jSEXP, SEXP dSEXP, SEXP LSEXP, SEXP KSEXP, SEXP JSEXP, SEXP mu_0SEXP, SEXP kappa_0SEXP, SEXP nu_0SEXP, SEXP sigma_0SEXP, SEXP iter_maxSEXP, SEXP warm_upSEXP, SEXP thinSEXP, SEXP seedSEXP, SEXP chainSEXP, SEXP num_posterior_samplesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -18,19 +18,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type L(LSEXP);
     Rcpp::traits::input_parameter< const int& >::type K(KSEXP);
     Rcpp::traits::input_parameter< const int& >::type J(JSEXP);
+    Rcpp::traits::input_parameter< const double& >::type mu_0(mu_0SEXP);
+    Rcpp::traits::input_parameter< const double& >::type kappa_0(kappa_0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type nu_0(nu_0SEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma_0(sigma_0SEXP);
     Rcpp::traits::input_parameter< const int& >::type iter_max(iter_maxSEXP);
     Rcpp::traits::input_parameter< const int& >::type warm_up(warm_upSEXP);
     Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< const int& >::type seed(seedSEXP);
     Rcpp::traits::input_parameter< const int& >::type chain(chainSEXP);
     Rcpp::traits::input_parameter< const int& >::type num_posterior_samples(num_posterior_samplesSEXP);
-    rcpp_result_gen = Rcpp::wrap(fhmm_fit(r, n_j, d, L, K, J, iter_max, warm_up, thin, seed, chain, num_posterior_samples));
+    rcpp_result_gen = Rcpp::wrap(fhmm_fit(r, n_j, d, L, K, J, mu_0, kappa_0, nu_0, sigma_0, iter_max, warm_up, thin, seed, chain, num_posterior_samples));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_fhmm_fhmm_fit", (DL_FUNC) &_fhmm_fhmm_fit, 12},
+    {"_fhmm_fhmm_fit", (DL_FUNC) &_fhmm_fhmm_fit, 16},
     {NULL, NULL, 0}
 };
 

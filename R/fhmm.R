@@ -19,14 +19,15 @@
 #'
 #' @export
 fhmm <- function(r, n_j,
-			     mu_0 = 0, kappa_0 = 1,
-				 sigma_sq = 1,
-				 L = 4 , K = 4,
-				 theta = rep(1,K),
-				 iter_max, warm_up,
-				 thin = 1,
-				 include_warmup = FALSE,
-				 seed = NULL
+                 mu_0 = 0, kappa_0 = 1,
+                 nu_0 = 1, sigma_0 = 1,
+                 L = 4 , K = 4,
+                 alpha = rep(1,K),
+                 theta = rep(1,L*K),
+                 iter_max, warm_up,
+                 thin = 1,
+                 include_warmup = FALSE,
+                 seed = NULL
 				 ){
 
     call <- match.call(expand.dots=TRUE)
@@ -48,15 +49,18 @@ fhmm <- function(r, n_j,
         seed <- 1L
 
 	r_  <-  qnorm(r_)
-	r_  <- r
 
 	d <- seq(from = floor(min(r_)), to = ceiling(max(r_)), by = 0.01) ## distance grid
-    num_posterior_samples <- sum(seq(from=warm_up+1,to = iter_max,by=1) %% thin == 0 )
+  num_posterior_samples <- sum(seq(from=warm_up+1,to = iter_max,by=1) %% thin == 0 )
 
-    fit <- fhmm_fit(r = r_, n_j = n_j, d = d,
-				    L = L, K = K, J = J,
-				    iter_max = iter_max, warm_up = warm_up,
-					thin = thin, seed = seed, chain = 1,
-                    num_posterior_samples = num_posterior_samples)
+  fit <- fhmm_fit(r = r_, n_j = n_j, d = d,
+                  L = L, K = K, J = J,
+                  mu_0 = mu_0, kappa_0 = kappa_0,
+                  sigma_0 = sigma_0, nu_0 = nu_0,
+                  iter_max = iter_max, warm_up = warm_up,
+                  thin = thin, seed = seed, chain = 1,
+                  num_posterior_samples = num_posterior_samples)
+
+  return(list(d = d, fit = fit,r = r_))
 
 }
