@@ -32,9 +32,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// green_loss_engine
+Eigen::ArrayXd green_loss_engine(const Eigen::ArrayXXi& cluster_assignment, const Eigen::ArrayXXd& pmat, const double& tau);
+RcppExport SEXP _fhmm_green_loss_engine(SEXP cluster_assignmentSEXP, SEXP pmatSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::ArrayXXi& >::type cluster_assignment(cluster_assignmentSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXXd& >::type pmat(pmatSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(green_loss_engine(cluster_assignment, pmat, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fhmm_fhmm_fit", (DL_FUNC) &_fhmm_fhmm_fit, 16},
+    {"_fhmm_green_loss_engine", (DL_FUNC) &_fhmm_green_loss_engine, 3},
     {NULL, NULL, 0}
 };
 

@@ -1,5 +1,7 @@
 #' Fit a finite heirarchical mixture model
-#'
+#' @description 
+#' Fits a finite heirarchical mixture model for comparison to the Nested Dirichlet Process
+#' the prior concentration parameters for both mixture components w and pi are fixed to be one.
 #' @param r vector of distances  associated with differing groups
 #' @param n_j matrix of integers denoting the start and length of each school's associated BEF distances
 #' @param L component truncation number
@@ -8,10 +10,6 @@
 #' @param kappa_0 variance hyperparameter for mu normal base measure. Default is 1; Normal(0,1).
 #' @param nu_0 df hyperparameter for sigma inv chisq base measure. Default is 1; InvChisq(1,1);
 #' @param sigma_0 scale hyperparameter for sigma inv chisq base measure. Default is 1; InvChisq(1,1);
-#' @param a_alpha hyperparameter for alpha gamma prior
-#' @param b_alpha hyperparameter for alpha gamma prior
-#' @param a_rho hyperparameter for rho gamma prior
-#' @param b_rho hyperparameter for rho gamma prior
 #' @param iter_max total number of iterations for which to run sampler
 #' @param warm_up number of iterations for which to burn-in or "warm-up" sampler
 #' @param thin number of iterations to thin by
@@ -22,8 +20,6 @@ fhmm <- function(r, n_j,
                  mu_0 = 0, kappa_0 = 1,
                  nu_0 = 1, sigma_0 = 1,
                  L = 4 , K = 4,
-                 alpha = rep(1,K),
-                 theta = rep(1,L*K),
                  iter_max, warm_up,
                  thin = 1,
                  include_warmup = FALSE,
@@ -53,14 +49,17 @@ fhmm <- function(r, n_j,
 	d <- seq(from = floor(min(r_)), to = ceiling(max(r_)), by = 0.01) ## distance grid
   num_posterior_samples <- sum(seq(from=warm_up+1,to = iter_max,by=1) %% thin == 0 )
 
-  fit <- fhmm_fit(r = r_, n_j = n_j, d = d,
+  fit <- list(fhmm_fit(r = r_, n_j = n_j, d = d,
                   L = L, K = K, J = J,
                   mu_0 = mu_0, kappa_0 = kappa_0,
                   sigma_0 = sigma_0, nu_0 = nu_0,
                   iter_max = iter_max, warm_up = warm_up,
                   thin = thin, seed = seed, chain = 1,
-                  num_posterior_samples = num_posterior_samples)
+                  num_posterior_samples = num_posterior_samples))
 
-  return(list(d = d, fit = fit,r = r_))
+  out <- hmm(c(list(K = K, L = L, d = R*pnorm(d), n = sum(n_j[,2]),
+                  call = call), fit),chains = 1)
+
+  return(out)
 
 }

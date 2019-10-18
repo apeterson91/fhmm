@@ -12,7 +12,9 @@ LazyData: true
 Imports: 
     Rcpp (>= 1.0.2),
     roxygen2,
-    RcppEigen
+    RcppEigen,
+    dplyr,
+    magrittr
 LinkingTo: 
     Rcpp,
     RcppEigen

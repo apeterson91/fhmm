@@ -20,49 +20,47 @@ library(tidyverse)
 ```
 
 ```{r data_generation}
-set.seed(23414)
-R <- 2
-num_schools <- 50
-d <- seq(from = 0, to = R, by = 0.01)
-lambda_1 <- function(x) ((20-x^2)*10*(x<=.75) )
-lambda_2 <- function(x) (x^2*10)*5*(x>1.25)  
-par(mfrow=c(1,2))
-tibble(Distance = c(d,d),
-       Density = c(lambda_1(d),lambda_2(d)),
-       Intensity_function = c(rep(1,length(d)),rep(2,length(d)))) %>% 
-    ggplot(aes(x=Distance,y=Density)) + geom_line() + 
-    facet_wrap(~Intensity_function) + ggthemes::theme_hc() + 
-    theme(strip.background = element_blank()) +
-    labs(title = "Generating Model Intensity Functions") 
+set.seed(3431)
+R <- 5
+d <- seq(from=0,to=R,by=0.01)
+f_1 <- function(x) 3*((1/2)*dbeta(x/R,1,8) + (1/2)*dbeta(x/R,6,1))
+f_2 <- function(x) 3*((1/5)*dbeta(x/R,3,2) + (2/3)*dbeta(x/R,3,1) + (2/15)*dbeta(x/R,1,1))
+f_3 <- function(x) 3*((1/2)*dbeta(x/R,8,2) + (1/2)*dbeta(x/R,30,50))
+pltdf <- tibble(Distance = d,
+       Intensity = f_1(d),
+       Cluster = 1) %>% 
+    rbind(.,tibble(Distance = d,
+                   Intensity = f_2(d),
+                   Cluster = 2)) %>% 
+    rbind(.,tibble(Distance = d,
+                   Intensity = f_3(d),
+                   Cluster = 3))
+pltdf %>% ggplot(aes(x=Distance,y=Intensity)) + geom_line() + 
+    facet_wrap(~Cluster) + theme_bw() + 
+    theme(strip.background = element_blank()) + 
+    ggtitle("Intensity Functions")
 ```
 
 ```{r}
-nhpp_1 <- as_tibble(BEFcluster::rnhpp(nsim = num_schools,lambda = lambda_1,max = 25, 
-                          interval = c(0,R))) %>% mutate(intensity_function = 1)
-
-nhpp_2 <- as_tibble(BEFcluster::rnhpp(nsim = num_schools,lambda = lambda_2,max = 25,
-                          interval = c(0,R))) %>% 
-    mutate(intensity_function = 2) %>% 
-    mutate(sim_id = sim_id + num_schools)
-
-rbind(nhpp_1,nhpp_2) %>% filter(!is.na(event_times)) %>% 
-    ggplot(aes(x=event_times)) + geom_density() + 
-    ggthemes::theme_hc() + facet_wrap(~intensity_function) + 
-    theme(strip.background = element_blank()) + 
-    labs(title = "Density Estimates of Sampled Data",
-         x = "Fast Food Distances",y = "Density")
+num_schools <- 50
+schools_1 <- BEFcluster::rnhpp(nsim = num_schools,lambda = f_1,
+                   interval = c(0,R),seed = 3431,
+                   max =max(f_1(d)))
+schools_2 <- BEFcluster::rnhpp(nsim = num_schools,lambda = f_2,interval = c(0,R),seed = 3431,max = max(f_2(d)))
+schools_3 <- BEFcluster::rnhpp(nsim = num_schools,lambda = f_3 ,interval = c(0,R),seed = 3431,max = max(f_3(d)))
+school_df <- as_tibble(schools_1)
+school_df <- rbind(school_df,as_tibble(schools_2) %>% mutate(sim_id = sim_id + num_schools)) %>% 
+    mutate(density = ifelse(sim_id<=num_schools,1,2) )
+school_df <- rbind(school_df,schools_3 %>% mutate(sim_id = sim_id + 2*num_schools, density=3))
+school_df %>% ggplot(aes(x=event_times)) + geom_density() + facet_wrap(~density) + 
+    theme_bw() + theme(strip.background = element_blank()) + xlab("Distance")
 ```
 
 ```{r model_fitting}
-observed_data <- rbind(nhpp_1,nhpp_2) %>% 
-  rename(school_id = sim_id,
-         FF_distance=event_times) %>% 
-    dplyr::filter(!is.na(FF_distance))
+r <- school_df %>% arrange(sim_id) %>% 
+    select(event_times) %>% pull()
 
-r <- observed_data %>% arrange(school_id) %>% 
-    select(FF_distance) %>% pull()
-
-n_j <- observed_data %>% group_by(school_id) %>% count() %>% 
+n_j <- school_df %>% group_by(sim_id) %>% count() %>% 
     ungroup() %>% mutate(start = (cumsum(n) ) ) %>% 
     mutate(start_ = replace_na(dplyr::lag(start),0) ) %>% select(-start) %>% 
     rename(start=start_,go =n) %>% 
@@ -72,28 +70,38 @@ n_j <- observed_data %>% group_by(school_id) %>% count() %>%
 
 
 ```{r}
-fit <- fhmm(r = r,
-            n_j = n_j,
-            mu_0 = 0,
-            kappa_0 = 1,
-            nu_0 = 1,
-            sigma_0 = 1,
-            L = 2, K = 2,
-            iter_max = 1E3,
-            warm_up = 5E2,
+fit <- fhmm(r = r, n_j = n_j,
+            L = 4, K = 3,
+            mu_0 = 0, kappa_0 = 1, ## Normal Mean Base Measure Hyperparameters
+            sigma_0 = 1, nu_0 = 1, ## Inverse Chi square prior Hyperparameters
+            iter_max = 1.5E4,
+            warm_up = 1.3E4,
             thin = 1,
-            seed = 3413)
+            seed = 34143)
 ```
 
 
 ```{r}
-plot(fit$d,colMeans(fit$fit$global_intensity),type='l')
+fit
 ```
 
 
 
 ```{r}
-par(mfrow=c(1,2))
-plot(fit$d,colMeans(fit$fit$cluster_intensity[,1:length(fit$d)]),type='l')
-plot(fit$d,colMeans(fit$fit$cluster_intensity[,(length(fit$d)+1):dim(fit$fit$cluster_intensity)[2]]),type='l')
+plot_pairs(fit)
 ```
+
+
+```{r}
+round(summary(fit$pi)$statistic,2)
+```
+
+
+
+```{r}
+plot_cluster_densities(fit)
+```
+
+
+
+

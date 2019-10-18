@@ -7,6 +7,7 @@
 
 // [[Rcpp::depends(RcppEigen)]]
 
+//' finite heirarchical mixture model - C++ estimation engine
 //' @param r vector of distances associatd with different BEFs
 //' @param n_j matrix of integers denoting the start and length of each observations associated BEF distances
 //' @param d a 1D grid of positive real values over which the differing intensities are evaluated
@@ -56,16 +57,18 @@ Rcpp::List fhmm_fit(
 	double prior_sd = 1.0;
 	int d_length = d.size();
 	std::normal_distribution<double> norm_draw(0,1);
-  taus = initialize_tau(L,K,nu_0,sigma_0);
+	taus = initialize_tau(L,K,nu_0,sigma_0);
 	mus = rnorm(L,K,prior_mu,prior_sd,rng);
-  mus = mus * sqrt(taus); 
+	mus = mus * sqrt(taus); 
 	pi = rdirichlet(alpha,rng);
 	w = rdirichlet(theta,rng);
 	double sample_ix = 0;
-  double s_n = 0;
-  double mu_n = 0;
+	double s_n = 0;
+	double mu_n = 0;
 	Eigen::ArrayXXd mu_sum(L,K);
-  Eigen::ArrayXXd tau_sum(L,K);
+	Eigen::ArrayXXd tau_sum(L,K);
+    Eigen::ArrayXXd cluster_matrix(J,J);
+	cluster_matrix = Eigen::ArrayXXd::Zero(J,J);
 
 
 
@@ -138,6 +141,10 @@ Rcpp::List fhmm_fit(
 			sampled_mus.row(sample_ix) = mu_samp;
       sampled_taus.row(sample_ix) = tau_samp;
 			sampled_pis.row(sample_ix) = pi;
+      for(int j = 0; j < J ; j++){
+        for(int j_ = 0 ; j_ < j ; j_ ++)
+          cluster_matrix(j,j_) += cluster_assignment(j) == cluster_assignment(j_) ? 1.0 : 0.0;
+      }
 			for(int k = 0; k < K; k++){
 				for(int d_ix = 0; d_ix < d_length; d_ix ++){
 					for(int l = 0; l < L; l++){
@@ -151,13 +158,18 @@ Rcpp::List fhmm_fit(
 
 	}
 
+  cluster_matrix = cluster_matrix / num_posterior_samples;
+
     return(Rcpp::List::create(
 				Rcpp::Named("pi") = sampled_pis,
 				Rcpp::Named("mu") = sampled_mus,
         Rcpp::Named("tau") = sampled_taus,
         Rcpp::Named("w") = sampled_ws,
 				Rcpp::Named("Cluster_Assignment") = cluster_assignments,
+        Rcpp::Named("Cluster_Matrix") = cluster_matrix,
 				Rcpp::Named("global_intensity") = global_intensity,
 				Rcpp::Named("cluster_intensity") = intensities
 				));
 }
+
+#include "green_loss.hpp"
